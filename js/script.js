@@ -1,211 +1,59 @@
-const video = document.getElementById("vid")
-const titles = document.getElementById("title")
-const warning = document.querySelectorAll(".warning")[0]
-const menu = document.getElementById("menu")
-const clockSection = document.querySelectorAll(".clock")[0]
-const dateTime = document.getElementById("date")
-const xmbMain = document.querySelectorAll(".xmb-main")[0]
-const section = document.querySelectorAll(".xmb-title")
-const submenuOne = document.querySelectorAll(".submenu.one")
-const submenuTwo = document.querySelectorAll(".submenu.two")
-const submenuthree = document.querySelectorAll(".submenu.three")
-const submenu = [submenuOne, submenuTwo, submenuthree]
+<script>
 const startupSound = document.getElementById("startup")
 const navSound = document.getElementById("nav")
-
-let sectionNumber = 0
-let subsection = 0
-let multiSection
 startupSound.play()
 
-let checkLoad = () =>{
-    return new Promise((resolve) => {
-        window.onload = resolve
+const sections = [...document.querySelectorAll(".xmb-title")]
+let sectionIndex = 0
+let itemIndex = 0
+
+function getItems() {
+    return [...sections[sectionIndex].querySelectorAll(".submenu-item")]
+}
+
+function updateUI() {
+    sections.forEach((s,i)=>{
+        s.classList.toggle("active", i===sectionIndex)
+        s.querySelectorAll(".submenu-item").forEach(x=>x.classList.remove("active"))
     })
+    const items = getItems()
+    if(items[itemIndex]) items[itemIndex].classList.add("active")
 }
 
-let titlesTimeOut = () =>{
-    return new Promise(resolve => {
-        setTimeout(resolve, 10000)
-    }
-    )
-}
-
-let warningTimeOut = () => {
-    return new Promise(resolve => {
-        setTimeout(resolve, 7000)
-    }
-    )
-}
-
-let warningDisplay = async () =>{
-    await titlesTimeOut();
-    titles.remove()
-    warning.style.opacity = '1'
-    setTimeout( () =>{
-        warning.style.opacity = '0'
-        warning.remove()
-    }, 6000)
-    await warningTimeOut();
-}
-
-let sideClock = () => {
-    let d  = new Date()
-    let clock = `${d.getDate()}/${d.getMonth()+1} ${d.getHours()}:${d.getMinutes()}`
-    dateTime.innerText = clock
-    setTimeout(sideClock, 1000)
-}
-
-let loadTitles = async () =>{
-    await checkLoad()
-    video.play()
-    video.style.opacity = '1'
-    titles.style.opacity = '1'
-    await warningDisplay();
-}
-
-let loadMenu = async () =>{
-    await loadTitles()
-    menu.style.opacity = '1'
-    sideClock()
-    clockSection.style.opacity = '1'
-}
-
-let moveMenu = (hd, ultraHd, fullHd) =>{
-    let width = document.body.clientWidth
-    if (width < 1400) {
-        xmbMain.style.marginRight = hd
-    }
-    else if (width >= 2560 && width <= 3840) {
-        xmbMain.style.marginRight = ultraHd
-    }
-    else {
-        xmbMain.style.marginRight = fullHd
-    }
-}
-
-let focusSection = (sn, right, left) =>{
-    section[sn].classList.add("active")
-    if(right === true){
-        section[sn-1].classList.remove("active")
-    }
-    else if(left === true){
-        section[sn+1].classList.remove("active")
-    }
-    switchSection()
-}
-
-let switchSection = () =>{
-    multiSection = false
-    switch (sectionNumber) {
-        case 0:
-            moveMenu('-40%', 0, 0)
+document.addEventListener("keydown", e=>{
+    const items = getItems()
+    switch(e.key){
+        case "ArrowRight":
+            navSound.play()
+            sectionIndex = Math.min(sectionIndex+1, sections.length-1)
+            itemIndex = 0
             break
-        case 1:
-            moveMenu('-10%', '18%', '18%')
-            multiSection = true
+        case "ArrowLeft":
+            navSound.play()
+            sectionIndex = Math.max(sectionIndex-1,0)
+            itemIndex = 0
             break
-        case 2:
-            moveMenu('22%', '32%', '39%')
+        case "ArrowDown":
+            navSound.play()
+            itemIndex = Math.min(itemIndex+1, items.length-1)
             break
-        case 3:
-            moveMenu('50%', '47%', '60%')
-            break
-        case 4:
-            moveMenu('76%', '62%', '77%')
-            break
-        case 5:
-            moveMenu('100%', '77%', '97%')
+        case "ArrowUp":
+            navSound.play()
+            itemIndex = Math.max(itemIndex-1,0)
             break
     }
-}
-
-let focusSubMenu = (sn, sub, down, up) =>{
-    switch(sub){
-        case 0:
-            if(up){
-                submenu[sub+1][sn].classList.remove("active")
-                submenu[sub][sn].classList.remove("inactive")
-            }
-            break
-        case 1:
-            if(down){
-                submenu[sub-1][sn].classList.add("inactive")
-                submenu[sub][sn].classList.add("active")
-            }
-            else if(up){
-                if(multiSection){
-                    submenu[sub+1][sn-1].classList.remove("active")
-                    submenu[sub-1][sn].classList.remove("gotop")
-                    submenu[sub][sn].classList.add("active")
-                }
-            }
-        case 2:
-            if(down){
-                if (multiSection) {
-                    submenu[sub-2][sn].classList.add("gotop")
-                    submenu[sub-1][sn].classList.remove("active")
-                    submenu[sub][sn - 1].classList.add("active")
-                }
-            }
-            break
-        default:
-            break
-    }
-}
-
-document.body.addEventListener('keydown', (e) =>{
-    if(e.key === 'ArrowDown'){
-        navSound.play()
-        e.preventDefault()
-        subsection++
-        if(subsection < 0){
-            subsection = 0
-        }
-        else if (subsection > 2){
-            subsection = 2
-        }
-        focusSubMenu(sectionNumber, subsection, true, false)
-    }
-
-    else if(e.key === 'ArrowUp'){
-        navSound.play()
-        e.preventDefault()
-        subsection--
-        if (subsection < 0) {
-            subsection = 0
-        }
-        else if (subsection > 2) {
-            subsection = 2
-        }
-        focusSubMenu(sectionNumber, subsection, false, true)
-    }
-
-    else if(e.key === 'ArrowRight'){
-        navSound.play()
-        e.preventDefault()
-        sectionNumber++
-        if(sectionNumber<0){
-            sectionNumber = 0
-        }
-        else if(sectionNumber >5){
-            sectionNumber = 5
-        }
-        focusSection(sectionNumber, true, false)
-    }
-
-    else if(e.key === 'ArrowLeft'){
-        navSound.play()
-        e.preventDefault()
-        sectionNumber--
-        if (sectionNumber < 0) {
-            sectionNumber = 0
-        }
-        else if (sectionNumber > 5) {
-            sectionNumber = 5
-        }
-        focusSection(sectionNumber, false, true)
-    }
+    updateUI()
 })
 
-loadMenu()
+updateUI()
+</script>
+
+<style>
+.xmb-contents{display:none}
+.xmb-title.active .xmb-contents{display:block}
+.submenu-item{opacity:.5}
+.submenu-item.active{opacity:1}
+</style>
+
+</body>
+</html>
